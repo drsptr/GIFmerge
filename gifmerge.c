@@ -50,6 +50,7 @@
 
 #define MAXVAL  4100            /* maxval of lzw coding size */
 #define MAXVALP 4200
+#define MAXMOV 10
 
 int debug_flag = 0;  /* make these options */
 int verbose = 0;  /* make these options */
@@ -124,7 +125,9 @@ main(argc,argv)
 int argc;
 char *argv[];
 {
- int first, i;
+ int first, i, j, nmov = 0; // nmov: count the # of tuple for -mov option
+ int xpos_v[MAXMOV], ypos_v[MAXMOV]; //
+ int delay_v[MAXMOV]; //
  int num_of_files,num_of_frames;
 
  fprintf(stderr,"=== GIFMerge Rev %2.2f (C) 1991,1992 by Mark Podlipec\n    Improvements by Rene K. Mueller 1996\n",DA_REV);
@@ -156,13 +159,27 @@ char *argv[];
       fprintf(stderr,"Position: %d %d\n",xpos,ypos), pos_set = 1;
    else if(!strcmp(argv[i+1],"-nopos"))
       pos_set = 0, fprintf(stderr,"NoPositioning\n");
+   else if(sscanf(argv[i+1], "-mov%d,%d,%u", &xpos_v[nmov], &ypos_v[nmov], &delay_v[nmov]) == 3) //
+	   fprintf(stderr,"Movement: %d, %d, %u\n",xpos_v[nmov],ypos_v[nmov], delay_v[nmov]), nmov++, pos_set = 1; //
    else if(argv[i+1][0]=='-')
       Usage();
    else {
      strcpy(gif_file_name,argv[i+1]);
      fprintf(stderr,"Merging %s ...\n",gif_file_name);
-     GIF_Read_File(gif_file_name,first);
-     first = 0;
+     if(nmov > 0){
+    	 for(j=0; j<nmov; j++){
+    		 xpos = xpos_v[j];
+    		 ypos = ypos_v[j];
+    		 delay = delay_v[j];
+    		 GIF_Read_File(gif_file_name,first);
+    		 first = 0;
+    	 }
+    	 nmov = 0;
+     }
+     else{
+    	 GIF_Read_File(gif_file_name,first);
+    	 first = 0;
+     }
    }
  }
  fputc(';',stdout); /* image separator */

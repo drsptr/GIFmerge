@@ -3,3 +3,6 @@ gifmerge: gifmerge.c gifmerge.h
 
 tar:
 	tar cf ../gifmerge.tar gifmerge.[ch] Makefile
+	
+clean:
+	rm gifmerge
