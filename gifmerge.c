@@ -57,6 +57,7 @@ int verbose = 0;  /* make these options */
 int imagex = 0;
 int imagey = 0;
 int imagec = 0;
+int back_width, back_height;
 
 GIF_Color gif_cmap[256];
 
@@ -168,8 +169,8 @@ char *argv[];
      fprintf(stderr,"Merging %s ...\n",gif_file_name);
      if(nmov > 0){
     	 for(j=0; j<nmov; j++){
-    		 xpos = xpos_v[j];
-    		 ypos = ypos_v[j];
+    		 xpos = (back_width * xpos_v[j]) / 100;
+    		 ypos = (back_height * ypos_v[j]) / 100;
     		 delay = delay_v[j];
     		 GIF_Read_File(gif_file_name,first);
     		 first = 0;
@@ -473,6 +474,11 @@ int first_time;
  gifscrn.bc  = fgetc(fp);	 if (first_time==TRUE) fputc(gifscrn.bc,fout);
  temp=fgetc(fp);		 if (first_time==TRUE) fputc(temp,fout);
  imagec=gif_ptwo[(1+gifscrn.pixbits)];
+
+ if(first_time){
+	 back_width = gifscrn.width;
+	 back_height = gifscrn.height;
+ }
 
  if (verbose)
   fprintf(stderr,"Screen: %dx%dx%d m=%d cres=%d bkgnd=%d pix=%d\n",
