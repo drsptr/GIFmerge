@@ -94,6 +94,10 @@ int transp = -1;
 int pos_set = 0;
 int xpos = 0, ypos = 0;
 
+// functions declaration
+int GIF_Get_Short(FILE *fp, FILE *fout, int first_time);
+void GIF_Put_Short(FILE *fout, unsigned int data);
+
 void TheEnd()
 {
  exit(0);
@@ -106,7 +110,7 @@ char *p;
  TheEnd();
 }
 
-Usage()
+int Usage()
 {
   fprintf(stderr,"\nUsage:\ngifmerge [-<r>,<g>,<b>] [-<delay>] [-l<loops>] [-d<disp>] *.gif > anim.gif\n\n");
   fprintf(stderr,"   -<r>,<g>,<b>   set transparency, ie -192,192,192, default: no transparency\n");
@@ -118,17 +122,18 @@ Usage()
   fprintf(stderr,"                               3 = restore previous\n");
   fprintf(stderr,"   -pos<x>,<y>    set offset position for image\n");
   fprintf(stderr,"   -nopos         reset offset position (default)\n");
+  fprintf(stderr,"   -mov<x>,<y>,<delay>   set offset percentage position and delay\n");
   fprintf(stderr,"\n   or look at http://www.iis.ee.ethz.ch/~kiwi/GIFMerge/\n\n");
   exit(0);
 }
 
-main(argc,argv)
+int main(argc,argv)
 int argc;
 char *argv[];
 {
  int first, i, j, nmov = 0; // nmov: count the # of tuple for -mov option
- int xpos_v[MAXMOV], ypos_v[MAXMOV]; //
- int delay_v[MAXMOV]; //
+ int xpos_v[MAXMOV], ypos_v[MAXMOV]; // contain all the pos values set with -mov option
+ int delay_v[MAXMOV]; // contains all the delay values set with the -mov option
  int num_of_files,num_of_frames;
 
  fprintf(stderr,"=== GIFMerge Rev %2.2f (C) 1991,1992 by Mark Podlipec\n    Improvements by Rene K. Mueller 1996\n",DA_REV);
@@ -160,16 +165,17 @@ char *argv[];
       fprintf(stderr,"Position: %d %d\n",xpos,ypos), pos_set = 1;
    else if(!strcmp(argv[i+1],"-nopos"))
       pos_set = 0, fprintf(stderr,"NoPositioning\n");
-   else if(sscanf(argv[i+1], "-mov%d,%d,%u", &xpos_v[nmov], &ypos_v[nmov], &delay_v[nmov]) == 3) //
-	   fprintf(stderr,"Movement: %d, %d, %u\n",xpos_v[nmov],ypos_v[nmov], delay_v[nmov]), nmov++, pos_set = 1; //
+   else if(sscanf(argv[i+1], "-mov%d,%d,%u", &xpos_v[nmov], &ypos_v[nmov], &delay_v[nmov]) == 3)
+       // mov option's values stored in the corrispondend array
+	   fprintf(stderr,"Movement: %d\%% %d\%% delay: %u\n",xpos_v[nmov],ypos_v[nmov], delay_v[nmov]), nmov++, pos_set = 1; //
    else if(argv[i+1][0]=='-')
       Usage();
    else {
      strcpy(gif_file_name,argv[i+1]);
      fprintf(stderr,"Merging %s ...\n",gif_file_name);
-     if(nmov > 0){
+     if(nmov > 0){ // if mov option is used
     	 for(j=0; j<nmov; j++){
-    		 xpos = (back_width * xpos_v[j]) / 100;
+    		 xpos = (back_width * xpos_v[j]) / 100; // from percentage values to absolute positions
     		 ypos = (back_height * ypos_v[j]) / 100;
     		 delay = delay_v[j];
     		 GIF_Read_File(gif_file_name,first);
@@ -608,7 +614,7 @@ int first_time;
 /*
  *
  */
-int GIF_Put_Short(fout,data)
+void GIF_Put_Short(fout,data)
 FILE *fout; unsigned int data;
 {
  fputc((unsigned char)(data&255),fout);      /* lo */
