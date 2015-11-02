@@ -131,9 +131,11 @@ int main(argc,argv)
 int argc;
 char *argv[];
 {
- int first, i, j, nmov = 0; // nmov: count the # of tuple for -mov option
+ int first, i;
+ int j, nmov = 0; // nmov: count the # of tuple for -mov option
  int xpos_v[MAXMOV], ypos_v[MAXMOV]; // contain all the pos values set with -mov option
  int delay_v[MAXMOV]; // contains all the delay values set with the -mov option
+ int tmp_x, tmp_y, tmp_d;
  int num_of_files,num_of_frames;
 
  fprintf(stderr,"=== GIFMerge Rev %2.2f (C) 1991,1992 by Mark Podlipec\n    Improvements by Rene K. Mueller 1996\n",DA_REV);
@@ -165,9 +167,13 @@ char *argv[];
       fprintf(stderr,"Position: %d %d\n",xpos,ypos), pos_set = 1;
    else if(!strcmp(argv[i+1],"-nopos"))
       pos_set = 0, fprintf(stderr,"NoPositioning\n");
-   else if(sscanf(argv[i+1], "-mov%d,%d,%u", &xpos_v[nmov], &ypos_v[nmov], &delay_v[nmov]) == 3)
+   else if(nmov < MAXMOV && sscanf(argv[i+1], "-mov%d,%d,%u", &xpos_v[nmov], &ypos_v[nmov], &delay_v[nmov]) == 3){
        // mov option's values stored in the corrispondend array
-	   fprintf(stderr,"Movement: %d\%% %d\%% delay: %u\n",xpos_v[nmov],ypos_v[nmov], delay_v[nmov]), nmov++, pos_set = 1; //
+       fprintf(stderr,"Movement: %d\%% %d\%% delay: %u\n",xpos_v[nmov],ypos_v[nmov], delay_v[nmov]);
+       nmov++;
+       pos_set = 1;
+   }else if(sscanf(argv[i+1], "-mov%d,%d,%u", &tmp_x, &tmp_y, &tmp_d) == 3)
+       fprintf(stderr,"Max number of mov commands reached.\n");
    else if(argv[i+1][0]=='-')
       Usage();
    else {
